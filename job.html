@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>下载中…</title>
+    <link rel="stylesheet" href="ui.css" />
+    <style>
+      body { display: flex; justify-content: center; padding: 64px 16px; min-height: 100vh; }
+      .wrap { width: 100%; max-width: 560px; }
+      .brand { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; color: var(--muted); font-weight: 600; }
+      .brand img { width: 24px; height: 24px; border-radius: 7px; }
+      .card { padding: 22px; }
+      #title { font-size: 16px; font-weight: 650; letter-spacing: -0.01em; word-break: break-word; margin: 0 0 6px; }
+      #status { color: var(--muted); min-height: 21px; margin-bottom: 14px; }
+      #status.ok { color: var(--ok); font-weight: 600; }
+      #status.err { color: var(--err); font-weight: 600; }
+      #detail { color: var(--muted); font-size: 12px; margin-top: 8px; font-variant-numeric: tabular-nums; min-height: 18px; }
+      pre { margin: 14px 0 0; padding: 12px; background: var(--sunken); border-radius: 10px; font-size: 12px; max-height: 220px; overflow: auto; white-space: pre-wrap; word-break: break-all; color: var(--muted); }
+      .foot { text-align: center; color: var(--faint); font-size: 12px; margin-top: 14px; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="brand"><img src="icons/icon128.png" alt="" />自用视频下载器</div>
+      <div class="card">
+        <h1 id="title">准备中…</h1>
+        <div id="status">正在读取任务</div>
+        <div class="progress"><div id="bar"></div></div>
+        <div id="detail"></div>
+        <pre id="log" hidden></pre>
+      </div>
+      <div class="foot">下载完成后这个标签页会自动关闭，文件保存在“下载”文件夹。</div>
+    </div>
+    <script src="lib/ffmpeg/ffmpeg.js"></script>
+    <script src="job.js"></script>
+  </body>
+</html>

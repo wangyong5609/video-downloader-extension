@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="ui.css" />
+    <style>
+      body { width: 392px; max-height: 590px; overflow-y: auto; }
+      header { display: flex; align-items: center; gap: 9px; padding: 14px 14px 10px; }
+      header img { width: 26px; height: 26px; border-radius: 7px; }
+      header b { font-size: 14px; font-weight: 650; letter-spacing: -0.01em; }
+      main { padding: 0 12px; display: flex; flex-direction: column; gap: 10px; }
+      .slot:empty { display: none; }
+      footer { padding: 12px 14px 14px; text-align: center; color: var(--faint); font-size: 11px; }
+
+      /* 批量下载入口：整行可点 */
+      .entry { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; font: inherit; color: var(--text); cursor: pointer; padding: 11px 12px; }
+      .entry:hover { background: var(--sunken); }
+      .entry b { display: block; font-weight: 650; }
+      .entry .meta { display: block; }
+      .entry > .ic { color: var(--faint); }
+      .entry-ic { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 9px; background: var(--accent-soft); color: var(--accent-ink); flex: none; }
+
+      /* 嗅探到的资源：默认折叠 */
+      details.more { padding: 10px 12px; }
+      details.more summary { display: flex; align-items: center; gap: 6px; list-style: none; cursor: pointer; font-weight: 600; color: var(--muted); }
+      details.more summary::-webkit-details-marker { display: none; }
+      details.more summary > .ic { transition: transform 0.15s; color: var(--faint); }
+      details.more[open] summary > .ic { transform: rotate(90deg); }
+      details.more[open] summary { margin-bottom: 6px; }
+      .res { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-top: 1px solid var(--line); }
+      .res-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 550; }
+      details.more .hint { margin-top: 8px; }
+
+      /* 空状态 */
+      .empty-state { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; padding: 26px 18px; }
+      .empty-state b { font-size: 14px; margin-top: 6px; }
+      .empty-ic { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 13px; background: var(--accent-soft); color: var(--accent-ink); }
+      .empty-ic .ic { width: 22px; height: 22px; }
+    </style>
+  </head>
+  <body>
+    <header><img src="icons/icon128.png" alt="" /><b>自用视频下载器</b></header>
+    <main id="main"></main>
+    <footer>不用登录 · 不限次数 · 文件只存在你的电脑上</footer>
+    <script src="shared.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>
