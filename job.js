@@ -87,6 +87,13 @@ async function withRetry(fn, times = 3) {
 // ---------- 保存到“下载”文件夹 ----------
 async function saveBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
+  if (!chrome.downloads) {
+    // 在后台隐藏页面里：把文件地址交给后台，由它存进“下载”文件夹
+    const r = await chrome.runtime.sendMessage({ type: 'saveBlobUrl', url, filename });
+    URL.revokeObjectURL(url);
+    if (!r || r.error) throw new Error('保存失败：' + ((r && r.error) || '没有回应'));
+    return;
+  }
   const id = await chrome.downloads.download({ url, filename, saveAs: false });
   await new Promise((resolve, reject) => {
     const onChanged = (d) => {

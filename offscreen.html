@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>后台下载</title>
+  </head>
+  <body>
+    <!-- 这个页面不会显示出来：下载、合并都在这里后台执行。下面几个元素只是给 job.js 写进度用的。 -->
+    <div id="title"></div>
+    <div id="status"></div>
+    <div><div id="bar"></div></div>
+    <div id="detail"></div>
+    <pre id="log" hidden></pre>
+    <script src="lib/ffmpeg/ffmpeg.js"></script>
+    <script src="job.js"></script>
+    <script src="offscreen.js"></script>
+  </body>
+</html>

@@ -73,6 +73,11 @@
       .toast b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .toast .dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: #4ade80; }
       .toast.err .dot { background: #f87171; }
+      .toast { overflow: hidden; }
+      .toast .pg { position: absolute; left: 0; bottom: 0; height: 3px; width: 0; background: #ff5a1f; transition: width .25s; }
+      .toast:not(.prog) .pg { display: none; }
+      .toast.prog .dot { background: #ff5a1f; animation: pulse 1s ease-in-out infinite alternate; }
+      @keyframes pulse { from { opacity: .35; } to { opacity: 1; } }
       .drawer {
         position: fixed; top: 0; right: 0; bottom: 0; width: min(620px, 100vw); background: #f6f6f7;
         box-shadow: -12px 0 40px rgba(0, 0, 0, .28); animation: slide .18s ease-out;
@@ -84,7 +89,7 @@
     <button class="dl sub" hidden aria-label="下载字幕">${TEXT}</button>
     <div class="tip" hidden></div>
     <button class="fab"><span class="ic">${LAYERS}</span>批量下载<span class="x" title="这次先收起">×</span></button>
-    <div class="toast" hidden><span class="dot"></span><b></b></div>
+    <div class="toast" hidden><span class="dot"></span><b></b><i class="pg"></i></div>
     <div class="drawer" hidden></div>
   `;
   (document.body || document.documentElement).appendChild(hostEl);
@@ -113,6 +118,17 @@
     toastEl.hidden = false;
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => (toastEl.hidden = true), isErr ? 6000 : 3500);
+  }
+
+  // 下载在后台进行，这里把进度显示在页面底部
+  function progressToast(msg) {
+    clearTimeout(toastTimer);
+    const pct = Math.round((msg.ratio || 0) * 100);
+    toastEl.className = 'toast prog';
+    toastEl.querySelector('b').textContent = `${msg.status || '正在下载…'} ${pct}%${msg.waiting ? `（后面还有 ${msg.waiting} 个）` : ''} · ${msg.title || ''}`;
+    toastEl.querySelector('.pg').style.width = pct + '%';
+    toastEl.hidden = false;
+    toastTimer = setTimeout(() => (toastEl.hidden = true), 20000); // 很久没有新进度就收起，免得一直挂着
   }
 
   // ---------- 找出鼠标下面的作品 ----------
@@ -317,7 +333,10 @@
   });
   // 弹窗里的“批量下载”也走这里
   chrome.runtime.onMessage.addListener((msg) => {
-    if (msg && msg.type === 'openDrawer') openDrawer();
+    if (!msg) return;
+    if (msg.type === 'openDrawer') openDrawer();
+    else if (msg.type === 'jobProgress') progressToast(msg);
+    else if (msg.type === 'jobDone') toast(msg.ok ? `已保存到“下载”文件夹：${msg.saved || msg.title}` : `下载失败：${msg.error || ''}（${msg.title || ''}）`, !msg.ok);
   });
 
   // 全屏看视频时不打扰

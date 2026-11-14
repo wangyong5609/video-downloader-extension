@@ -331,7 +331,7 @@ async function startJob(job, hint) {
     hint.err('启动失败：' + r.error);
     return false;
   }
-  hint.ok('已开始下载。进度在旁边新开的标签页里，下完会自动关闭，文件在“下载”文件夹。');
+  hint.ok(r && r.mode === 'tab' ? '已开始下载。进度在旁边新开的标签页里，下完会自动关闭。' : '已开始在后台下载。进度看插件图标上的百分比，下完会出现在浏览器的下载记录里。');
   return true;
 }
 

@@ -148,7 +148,7 @@ async function setReferer(tabId, referer, embedded) {
     addRules: [
       {
         id: tabId,
-        priority: 1,
+        priority: 2,
         action: {
           type: 'modifyHeaders',
           requestHeaders: [
@@ -173,16 +173,101 @@ function sanitizeFilename(name) {
   );
 }
 
+// ---------- 后台隐藏页面（真正下载、合并的地方）----------
+let offscreenReady = null;
+async function ensureOffscreen() {
+  if (await chrome.offscreen.hasDocument()) return;
+  if (!offscreenReady) {
+    offscreenReady = chrome.offscreen
+      .createDocument({ url: 'offscreen.html', reasons: ['BLOBS'], justification: '在后台下载视频、合并音画并保存，不打开标签页' })
+      .finally(() => (offscreenReady = null));
+  }
+  await offscreenReady;
+}
+
 async function createJob(jobIn, fromTab) {
   const id = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-  const job = { ...jobIn, id, filename: sanitizeFilename(jobIn.filename) };
+  const job = { ...jobIn, id, filename: sanitizeFilename(jobIn.filename), fromTabId: fromTab ? fromTab.id : -1 };
+  // 优先在后台执行，不打开标签页
+  try {
+    await ensureOffscreen();
+    let r = null;
+    for (let i = 0; i < 3 && !(r && r.ok); i++) {
+      try {
+        r = await chrome.runtime.sendMessage({ target: 'offscreen', type: 'runJob', job });
+      } catch {
+        await new Promise((res) => setTimeout(res, 300)); // 隐藏页面刚建好，可能还没准备好接收
+      }
+    }
+    if (r && r.ok) return { id, mode: 'background', ahead: r.ahead || 0 };
+  } catch {}
+  // 后台方式起不来时，退回老办法：开一个标签页在里面下载
   await chrome.storage.session.set({ [`job_${id}`]: job });
   await chrome.tabs.create({
     url: chrome.runtime.getURL(`job.html?id=${id}`),
     active: false,
     index: fromTab ? fromTab.index + 1 : undefined,
   });
-  return { id };
+  return { id, mode: 'tab' };
+}
+
+// 后台任务的“来源”规则。隐藏页面发的请求不属于任何标签页，两种写法都加上，哪条对上都行
+const JOB_RULE_IDS = [2000000001, 2000000002];
+async function setJobReferer(referer) {
+  let origin = '';
+  try {
+    origin = referer ? new URL(referer).origin : '';
+  } catch {}
+  const addRules = [];
+  if (origin) {
+    const action = {
+      type: 'modifyHeaders',
+      requestHeaders: [
+        { header: 'Referer', operation: 'set', value: referer },
+        { header: 'Origin', operation: 'set', value: origin },
+      ],
+    };
+    addRules.push({ id: JOB_RULE_IDS[0], priority: 1, action, condition: { tabIds: [chrome.tabs.TAB_ID_NONE], resourceTypes: ['xmlhttprequest'] } });
+    addRules.push({ id: JOB_RULE_IDS[1], priority: 1, action, condition: { initiatorDomains: [chrome.runtime.id], resourceTypes: ['xmlhttprequest'] } });
+  }
+  await chrome.declarativeNetRequest.updateSessionRules({ removeRuleIds: JOB_RULE_IDS, addRules });
+}
+
+// 把隐藏页面里做好的文件存进“下载”文件夹，等它存完
+async function saveFromOffscreen(url, filename) {
+  const id = await chrome.downloads.download({ url, filename, saveAs: false });
+  await new Promise((resolve, reject) => {
+    const onChanged = (d) => {
+      if (d.id !== id || !d.state) return;
+      if (d.state.current === 'complete') {
+        chrome.downloads.onChanged.removeListener(onChanged);
+        resolve();
+      } else if (d.state.current === 'interrupted') {
+        chrome.downloads.onChanged.removeListener(onChanged);
+        reject(new Error('保存被中断：' + ((d.error && d.error.current) || '')));
+      }
+    };
+    chrome.downloads.onChanged.addListener(onChanged);
+    chrome.downloads.search({ id }).then(([d]) => {
+      if (d && d.state === 'complete') {
+        chrome.downloads.onChanged.removeListener(onChanged);
+        resolve();
+      }
+    });
+  });
+}
+
+// 进度：转给发起下载的那个网页，并在插件图标上显示百分比
+async function relayProgress(msg) {
+  if (msg.tabId == null || msg.tabId < 0) return;
+  chrome.tabs.sendMessage(msg.tabId, msg).catch(() => {});
+  if (msg.type === 'jobProgress') {
+    chrome.action.setBadgeText({ tabId: msg.tabId, text: `${Math.round((msg.ratio || 0) * 100)}%` }).catch(() => {});
+  } else {
+    const items = await loadItems(msg.tabId);
+    chrome.action.setBadgeText({ tabId: msg.tabId, text: msg.ok ? '✓' : '!' }).catch(() => {});
+    setTimeout(() => chrome.action.setBadgeText({ tabId: msg.tabId, text: items.length ? String(items.length) : '' }).catch(() => {}), 4000);
+  }
 }
 
 // 页面上某个作品的下载按钮被点了：查出这个作品的下载地址，建一个下载任务
@@ -272,6 +357,19 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       case 'quickSubtitle':
         // 页面上的“字幕”按钮（B站）
         return await quickSubtitle(msg, sender.tab);
+
+      case 'jobProgress':
+      case 'jobDone':
+        await relayProgress(msg);
+        return true;
+
+      case 'jobReferer':
+        await setJobReferer(msg.referer);
+        return true;
+
+      case 'saveBlobUrl':
+        await saveFromOffscreen(msg.url, msg.filename);
+        return { ok: true };
 
       case 'whoami':
         return { tabId: sender.tab ? sender.tab.id : -1 };

@@ -179,11 +179,17 @@ const PROVIDERS = {
 
 // 按“清晰度偏好”挑一个版本：同分辨率优先 H.264（兼容性好）
 function pickFormat(formats, pref) {
-  const sorted = formats.slice().sort((a, b) => b.res - a.res || Number(a.codec === 'h265') - Number(b.codec === 'h265') || (b.size || b.bitrate) - (a.size || a.bitrate));
+  // 编码优先级：H.264 最通用，其次 H.265，其他（如 AV1）排最后
+  const rank = (f) => (f.codec === 'h264' ? 0 : f.codec === 'h265' ? 1 : 2);
+  const sorted = formats.slice().sort((a, b) => b.res - a.res || rank(a) - rank(b) || (b.size || b.bitrate) - (a.size || a.bitrate));
   if (pref === 'max') return sorted[0];
-  if (pref === 'min') return sorted[sorted.length - 1];
+  if (pref === 'min') {
+    // 最低清晰度里也要挑最通用的编码，而不是排在最后的那个
+    const low = sorted[sorted.length - 1].res;
+    return sorted.find((f) => f.res === low);
+  }
   const want = Number(pref);
-  return sorted.find((f) => f.res && f.res <= want) || sorted[sorted.length - 1];
+  return sorted.find((f) => f.res && f.res <= want) || sorted.find((f) => f.res === sorted[sorted.length - 1].res);
 }
 
 
