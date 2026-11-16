@@ -8,6 +8,8 @@
 - **不连任何第三方服务器**：所有解析和下载都在你自己的浏览器里完成，文件只存在你的电脑上
 - **只做免费能拿到的内容**：不接付费的语音识别之类的服务
 
+**[⬇️ 下载最新版安装包](https://github.com/wangyong5609/video-downloader-extension/releases/latest/download/shipian.zip)**　·　[怎么安装](#安装)
+
 > 这是个人自用起步的项目，还在边用边改。下面每项功能后面都标了验证状态，没验证过的会如实写明。
 
 ## 能做什么
@@ -58,14 +60,37 @@
 
 ## 安装
 
-目前只支持 Chrome（以及其他 Chromium 内核的浏览器），需要以“开发者模式”加载：
+目前只支持 Chrome（以及 Edge 等其他 Chromium 内核的浏览器）。插件没有上架 Chrome 商店，需要以“开发者模式”加载。两种装法，选一种就行。
 
-1. 下载这个仓库（`Code → Download ZIP` 后解压，或 `git clone`）。
-2. 打开 `chrome://extensions`，打开右上角的“开发者模式”。
-3. 点“加载已解压的扩展程序”，选择这个项目的文件夹。
-4. 已经打开的网页需要刷新一下，插件才会在页面里生效。
+### 方式一：让你的 AI 助手帮你装
 
-更新代码后，回到 `chrome://extensions` 点这个插件卡片上的“重新加载”，再刷新网页。
+如果你在用 Claude Code、Codex、Cursor 这类能操作电脑的 AI 助手，把下面这段话原样发给它：
+
+```text
+帮我安装 Chrome 插件「拾片」：
+1. 下载安装包：https://github.com/wangyong5609/video-downloader-extension/releases/latest/download/shipian.zip
+2. 解压到我的用户目录下的 shipian 文件夹（例如 ~/shipian）。如果这个文件夹已经存在，先清空再解压。
+3. 确认这个文件夹里直接就能看到 manifest.json。
+4. 把文件夹的完整路径告诉我，然后一步一步带我在 Chrome 里完成最后的加载：
+   打开 chrome://extensions → 打开右上角的“开发者模式” → 点“加载已解压的扩展程序” → 选这个文件夹。
+5. 提醒我：这个文件夹以后不能移动或删除；已经打开的网页要刷新一下插件才生效。
+```
+
+最后“加载”那一步需要你自己点几下鼠标：Chrome 出于安全考虑，不允许任何程序替你悄悄装插件。
+
+### 方式二：自己下载安装
+
+1. 打开 [Releases 页面](https://github.com/wangyong5609/video-downloader-extension/releases/latest)，下载 `shipian.zip`。
+2. 解压，得到一个文件夹（里面直接能看到 `manifest.json`）。把它放到一个不会误删的地方，**装好以后不能移动或删除这个文件夹**。
+3. 在 Chrome 地址栏输入 `chrome://extensions` 并回车，打开右上角的“开发者模式”。
+4. 点左上角“加载已解压的扩展程序”，选择刚才解压出来的文件夹。
+5. 已经打开的网页需要刷新一下，插件才会在页面里生效。
+
+建议点一下工具栏上的拼图图标，把“拾片”固定出来，方便使用。
+
+### 更新
+
+下载新版的 `shipian.zip`，解压后覆盖原来的文件夹，回到 `chrome://extensions` 点这个插件卡片上的“重新加载”，再刷新网页。
 
 ## 已知的限制
 
@@ -110,6 +135,16 @@
 
 ## 开源协议
 
-本项目自己的代码以 [MIT](LICENSE) 协议开源。
+本项目自己的代码从 v1.1.0 起以 [GNU AGPL-3.0](LICENSE) 协议开源。用大白话说：
+
+- **自己安装使用**：随便用，免费。
+- **修改、二次开发、再分发**（包括改个名字重新发布、集成进你自己的产品或服务）：可以，但必须保留原作者署名和本协议，并且**把你改过的完整源码以同样的 AGPL-3.0 协议公开**。
+- **不想公开源码，或想用于闭源、商业产品**：需要先取得作者的单独授权，联系方式见下面。
+
+以上只是方便理解的说明，具体以 [LICENSE](LICENSE) 文件里的协议原文为准。
 
 `lib/ffmpeg/` 目录下是第三方组件 ffmpeg.wasm，不是本项目编写的。它在 npm 上标注的协议是 MIT；其中的 `ffmpeg-core.wasm` 是 FFmpeg 的编译产物，FFmpeg 本身有自己的协议条款。如果你要再分发或商用，请以 [ffmpeg.wasm](https://github.com/ffmpegwasm/ffmpeg.wasm) 和 [FFmpeg](https://ffmpeg.org/legal.html) 官方说明为准。
+
+## 联系作者
+
+商业授权、合作，或者使用中遇到问题，可以加作者个人微信：**ywang5609**（请备注“拾片”）。发现 bug 也欢迎直接在 GitHub 提 Issue。
