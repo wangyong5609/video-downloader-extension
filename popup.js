@@ -468,11 +468,20 @@ async function renderBili(tab, slot) {
     return true;
   }
   const base = { filename: info.title, referer: 'https://www.bilibili.com/' };
+  // 每个清晰度只给一个按钮。B站 的“1080P 高码率”和“1080P 高清”简称都是 1080P，
+  // 列表已按画质从高到低排好，同名的只留第一个（画质更好的那个）。
+  const seenLabel = new Set();
+  const qualities = info.qualities.filter((q) => {
+    const k = shortQuality(q.label);
+    if (seenLabel.has(k)) return false;
+    seenLabel.add(k);
+    return true;
+  });
   const view = {
     platform: 'B站',
     title: info.title,
     meta: [info.owner, fmtDur(info.duration)],
-    formats: info.qualities.map((q) => ({
+    formats: qualities.map((q) => ({
       label: shortQuality(q.label),
       sub: [q.size ? '约 ' + fmtSize(q.size) : '', q.codec && q.codec !== 'H.264' ? q.codec : ''].filter(Boolean).join(' · '),
       job: q.single || !info.audio ? { ...base, kind: 'direct', urls: q.urls } : { ...base, kind: 'merge', videoUrls: q.urls, audioUrls: info.audio.urls },
