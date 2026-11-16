@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "拾片 - 视频素材下载",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "给做自媒体的人用：在 B站、抖音、小红书、快手、微博上直接下载视频、图片、封面和字幕，支持批量下载和作品数据表。不登录、不限次数，全部在本机浏览器里完成。",
   "permissions": [
     "webRequest",
